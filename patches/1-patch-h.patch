@@ -1,0 +1,5 @@
+16a17,18
+> #define GxEPD2DarkBorder
+> 
+66a69
+>     void setDarkBorder(bool Dark);        // GuruSR:  Changed for setDarkBorder

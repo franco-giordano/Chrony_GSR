@@ -1,0 +1,10 @@
+20a21,25
+> bool IsDark;                                    // GuruSR:  Changed for setDarkBorder
+> void GxEPD2_154_D67::setDarkBorder(bool Dark){  // GuruSR:  Changed for setDarkBorder
+> 	IsDark=Dark;                                  // GuruSR:  Changed for setDarkBorder
+> }                                               // GuruSR:  Changed for setDarkBorder
+> 
+343c348
+<   _writeData(0x05);
+---
+>   _writeData(IsDark ? 0x02 : 0x05);         // GuruSR:  Changed for setDarkBorder

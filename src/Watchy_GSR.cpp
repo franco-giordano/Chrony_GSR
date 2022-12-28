@@ -696,6 +696,7 @@ void WatchyGSR::drawTime(uint8_t Flags){
 }
 
 void WatchyGSR::drawDay(){
+    Serial.println("DRAWING DAYYYYYYYYYYYYYYYYYYYY");
     String O = LGSR.GetFormatID(Options.LanguageID,0);
     O.replace("{W}",LGSR.GetWeekday(Options.LanguageID, WatchTime.Local.Wday));
     setFontFor(O,Design.Face.DayFont,Design.Face.DayFontSmall,Design.Face.DayFontSmaller,Design.Face.DayGutter);
@@ -1190,7 +1191,7 @@ void WatchyGSR::drawData(String dData, byte Left, byte Bottom, WatchyGSR::DesOps
             break;
     };
     display.setCursor(Left, Bottom);
-    display.print(dData);
+    Serial.println(String(display.print(dData)));
 
     if (isTime && PM){
         if (Style == WatchyGSR::dRIGHT) Left = constrain(Left - 12, Gutter, 200 - Gutter);

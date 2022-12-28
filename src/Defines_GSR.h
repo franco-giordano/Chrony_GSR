@@ -90,12 +90,12 @@
 #define GSR_AlarmSetup 1234567890
 
 //pins
-#define RTC_INT_PIN GPIO_NUM_27
+// #define RTC_INT_PIN GPIO_NUM_27
 #define EPD_CS 5
 #define EPD_DC 10
 #define EPD_RESET 9
 #define EPD_BUSY 19
-#define VIB_MOTOR_PIN 13
+// #define VIB_MOTOR_PIN 13
 #define GSR_MENU_PIN 26
 #define GSR_BACK_PIN 25
 #define GSR_DOWN_PIN 4

@@ -89,11 +89,11 @@ class WatchyGSR{
         virtual bool NoMenu() final;
         virtual void initWatchFaceStyle();
         virtual void drawWatchFaceStyle();
+        void drawData(String dData, byte Left, byte Bottom, WatchyGSR::DesOps Style, byte Gutter, bool isTime = false, bool PM = false);
+        void setFontFor(String O, const GFXfont *Normal, const GFXfont *Small, const GFXfont *Smaller, byte Gutter = 5);
    private:
         void setStatus(String Status);
         void drawMenu();
-        void setFontFor(String O, const GFXfont *Normal, const GFXfont *Small, const GFXfont *Smaller, byte Gutter = 5);
-        void drawData(String dData, byte Left, byte Bottom, WatchyGSR::DesOps Style, byte Gutter, bool isTime = false, bool PM = false);
         void GoDark();
         void detectBattery();
         void ProcessNTP();
