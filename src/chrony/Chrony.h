@@ -31,14 +31,14 @@ class ChronyGSR : public WatchyGSR
 public:
     ChronyGSR() : WatchyGSR() {}
 
-    // void InsertPost()
-    // {
-    //     // for some reason, GSR marks my RTC as dead on boot
-    //     // because of this, my top right button won't work
-    //     // and performance will be set to 'battery saving'
-    //     // set it to false to avoid this
-    //     WatchTime.DeadRTC = false;
-    // };
+    void InsertPost()
+    {
+        // for some reason, GSR marks my RTC as dead on boot
+        // because of this, my top right button won't work
+        // and performance will be set to 'battery saving'
+        // force-set it to false to avoid this
+        WatchTime.DeadRTC = false;
+    };
 
     void InsertDefaults()
     {
