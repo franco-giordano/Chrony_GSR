@@ -34,17 +34,13 @@ extern struct Optional final
     uint8_t WatchFaceStyle;  // Using the Style values from Defines_GSR.
     uint8_t LanguageID;      // The LanguageID.
 } Options;
-extern struct MenuUse final {
-    int8_t Style;           // GSR_MENU_INNORMAL or GSR_MENU_INOPTIONS
-    int8_t Item;            // What Menu Item is being viewed.
-    int8_t SubItem;         // Used for menus that have sub items, like alarms and Sync Time.
-    int8_t SubSubItem;      // Used mostly in the alarm to offset choice.
+extern struct MenuUse final
+{
+    int8_t Style;      // GSR_MENU_INNORMAL or GSR_MENU_INOPTIONS
+    int8_t Item;       // What Menu Item is being viewed.
+    int8_t SubItem;    // Used for menus that have sub items, like alarms and Sync Time.
+    int8_t SubSubItem; // Used mostly in the alarm to offset choice.
 } Menu;
-extern struct CountUp final {
-  bool Active;
-  time_t SetAt;
-  time_t StopAt;
-} TimerUp;
 
 RTC_DATA_ATTR char ALERT_BUFFER[50];
 RTC_DATA_ATTR int WIFI_USAGE_COUNTER = 0;
@@ -106,39 +102,39 @@ public:
             Design.Menu.FontSmaller = &aAntiCorona10pt7b;
             Design.Face.Bitmap = nullptr;
             Design.Face.SleepBitmap = rtcsleep;
-            Design.Face.Gutter = 4;
-            Design.Face.Time = 56;
+            Design.Face.Gutter = 0;
+            Design.Face.Time = 87;
             Design.Face.TimeHeight = 45;
             Design.Face.TimeColor = GxEPD_BLACK;
             Design.Face.TimeFont = &timeLGMono42pt7b;
-            Design.Face.TimeLeft = 0;
-            Design.Face.TimeStyle = WatchyGSR::dCENTER;
-            Design.Face.Day = 101;
-            Design.Face.DayGutter = 4;
+            Design.Face.TimeLeft = 16;
+            Design.Face.TimeStyle = WatchyGSR::dSTATIC;
+            Design.Face.DayLeft = 76; // for Day of Week String
+            Design.Face.Day = 184;
+            Design.Face.DayGutter = 0;
             Design.Face.DayColor = GxEPD_BLACK;
-            Design.Face.DayFont = &timeLGMono20pt7b;
-            Design.Face.DayFontSmall = &timeLGMono20pt7b;
-            Design.Face.DayFontSmaller = &timeLGMono20pt7b;
-            Design.Face.DayLeft = 0;
-            Design.Face.DayStyle = WatchyGSR::dCENTER;
-            Design.Face.Date = 143;
-            Design.Face.DateGutter = 4;
+            Design.Face.DayFont = &smTextMono8pt7b;
+            Design.Face.DayFontSmall = &smTextMono8pt7b;
+            Design.Face.DayFontSmaller = &smTextMono8pt7b;
+            Design.Face.DayStyle = WatchyGSR::dSTATIC;
+            Design.Face.DateLeft = 76; // for Month Str and Day number (e.g. 8 November)
+            Design.Face.Date = 169;
+            Design.Face.DateGutter = 0; // only use for Month Str
             Design.Face.DateColor = GxEPD_BLACK;
             Design.Face.DateFont = &smTextMono8pt7b;
             Design.Face.DateFontSmall = &smTextMono8pt7b;
             Design.Face.DateFontSmaller = &smTextMono8pt7b;
-            Design.Face.DateLeft = 0;
-            Design.Face.DateStyle = WatchyGSR::dCENTER;
+            Design.Face.DateStyle = WatchyGSR::dSTATIC;
+            Design.Face.YearLeft = 99; // for Year number (e.g. 2022)
             Design.Face.Year = 186;
-            Design.Face.YearLeft = 99;
             Design.Face.YearColor = GxEPD_BLACK;
             Design.Face.YearFont = &smTextMono8pt7b;
             Design.Face.YearLeft = 0;
-            Design.Face.YearStyle = WatchyGSR::dCENTER;
-            Design.Status.WIFIx = 5;
-            Design.Status.WIFIy = 193;
+            Design.Face.YearStyle = WatchyGSR::dSTATIC;
+            Design.Status.WIFIx = 16;
+            Design.Status.WIFIy = 26;
             Design.Status.BATTx = 155;
-            Design.Status.BATTy = 178;
+            Design.Status.BATTy = 39;
         }
     };
 
@@ -150,31 +146,10 @@ public:
             Serial.println(String(GuiMode));
             Serial.print("WIFI IS: ");
             Serial.println(currentWiFi());
-            if (SafeToDraw())
-            {
-                drawTime();
-                drawYear();
-                drawDay();
-            }
-            if (NoMenu())
-                drawDate();
-            if (ALERT_BUFFER[0]) // there is an alert
-            {
-                int16_t x1, y1, z1;
-                uint16_t w, h;
-                display.drawBitmap(0, Design.Menu.Top, MenuBackground, GSR_MenuWidth, GSR_MenuHeight, ForeColor(), BackColor());
-                setFontFor("Alert", Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
-                display.getTextBounds("Alert", 0, Design.Menu.Header + Design.Menu.Top, &x1, &y1, &w, &h);
-                w = (196 - w) / 2;
-                display.setCursor(w + 2, Design.Menu.Header + Design.Menu.Top);
-                display.print("Alert");
 
-                setFontFor(ALERT_BUFFER, Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
-                display.getTextBounds(ALERT_BUFFER, 0, Design.Menu.Data + Design.Menu.Top, &x1, &y1, &w, &h);
-                w = (196 - w) / 2;
-                display.setCursor(w + 2, Design.Menu.Data + Design.Menu.Top);
-                display.print(ALERT_BUFFER);
-            }
+            drawChronyWatchStyle();
+
+            drawAlert();
         }
     };
 
@@ -182,7 +157,7 @@ public:
     {
         switch (SwitchNumber)
         {
-        case 2:             // Back
+        case 2: // Back
             Serial.println("OVERRIDE BACK!");
             // Simulate we are on TIMEUP menu
             GuiMode = GSR_MENUON;
@@ -197,7 +172,7 @@ public:
             return true;    // Respond with "I used a button", so the WatchyGSR knows you actually did something with a button.
             break;
         case 3: // Up
-            return true;
+            return false;
             break;
         case 4: // Down
             Serial.println("OVERRIDE ABAJO!");
@@ -220,10 +195,74 @@ public:
         display.setFont(&smTextMono8pt7b);
         display.setTextColor(GxEPD_WHITE);
         drawData("Watchy is asleep", Design.Face.TimeLeft, Design.Face.Time, WatchyGSR::dCENTER, 0);
-        display.drawBitmap(100 - 45/2, 100 - 40/2 , Design.Face.SleepBitmap, 45, 40, GxEPD_WHITE, GxEPD_BLACK);
+        display.drawBitmap(100 - 45 / 2, 100 - 40 / 2, Design.Face.SleepBitmap, 45, 40, GxEPD_WHITE, GxEPD_BLACK);
         drawData("Tap to wake", Design.Face.DateLeft, Design.Face.Date + 5, WatchyGSR::dCENTER, 0);
         return true;
     };
+
+    void drawChronyWatchStyle()
+    {
+        if (NoMenu())
+        {
+            // drawTime();
+            String hourStr = padWithZero(WatchTime.Local.Hour);
+            String minStr = padWithZero(WatchTime.Local.Minute);
+
+            display.setFont(Design.Face.TimeFont);
+            display.setTextColor(Design.Face.TimeColor);
+            drawData(hourStr, Design.Face.TimeLeft, Design.Face.Time, Design.Face.TimeStyle, 0);
+            drawData(minStr, 16, 148, Design.Face.TimeStyle, 0);
+
+            // drawDay();
+            display.setFont(Design.Face.DayFont);
+            display.setTextColor(Design.Face.DayColor);
+            String dayName = LGSR.GetWeekday(Options.LanguageID, WatchTime.Local.Wday);
+
+            String monthName = LGSR.GetMonth(Options.LanguageID, WatchTime.Local.Month);
+            String dateStr = padWithZero(WatchTime.Local.Day);
+
+            // day number (08)
+            display.setFont(&timeLGMono20pt7b); // use different hardcoded values
+            display.setCursor(16, 184);         // WatchyGSR assumes monthStyle == dateStyle
+            display.print(dateStr);             // which is not the case here
+
+            // month name (december)
+            display.setFont(Design.Face.DateFont);
+            display.setTextColor(Design.Face.DateColor);
+            drawData(monthName, Design.Face.DateLeft, Design.Face.Date, Design.Face.DateStyle, 0);
+
+            // week day (thursday)
+            display.setFont(Design.Face.DayFont);
+            display.setTextColor(Design.Face.DayColor);
+            drawData(dayName, Design.Face.DayLeft, Design.Face.Day, Design.Face.DayStyle, 0);
+        }
+    }
+
+    String padWithZero(uint8_t value)
+    {
+        return value < 10 ? "0" + String(value) : String(value);
+    }
+
+    void drawAlert()
+    {
+        if (ALERT_BUFFER[0]) // there is an alert
+        {
+            int16_t x1, y1, z1;
+            uint16_t w, h;
+            display.drawBitmap(0, Design.Menu.Top, MenuBackground, GSR_MenuWidth, GSR_MenuHeight, ForeColor(), BackColor());
+            setFontFor("Alert", Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
+            display.getTextBounds("Alert", 0, Design.Menu.Header + Design.Menu.Top, &x1, &y1, &w, &h);
+            w = (196 - w) / 2;
+            display.setCursor(w + 2, Design.Menu.Header + Design.Menu.Top);
+            display.print("Alert");
+
+            setFontFor(ALERT_BUFFER, Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
+            display.getTextBounds(ALERT_BUFFER, 0, Design.Menu.Data + Design.Menu.Top, &x1, &y1, &w, &h);
+            w = (196 - w) / 2;
+            display.setCursor(w + 2, Design.Menu.Data + Design.Menu.Top);
+            display.print(ALERT_BUFFER);
+        }
+    }
 
     // bool OverrideBitmap()
     // {
