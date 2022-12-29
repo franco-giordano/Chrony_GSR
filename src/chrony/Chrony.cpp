@@ -111,7 +111,7 @@ void ChronyGSR::InsertInitWatchStyle(uint8_t StyleID)
         Design.Face.YearFont = &smTextMono8pt7b;
         Design.Face.YearLeft = 0;
         Design.Face.YearStyle = WatchyGSR::dSTATIC;
-        Design.Status.WIFIx = 16;
+        Design.Status.WIFIx = 144;
         Design.Status.WIFIy = 26;
         Design.Status.BATTx = 155;
         Design.Status.BATTy = 39;
@@ -178,6 +178,11 @@ void ChronyGSR::drawChronyWatchStyle()
     {
         drawDateTime();
         drawTemperature();
+
+        // batt voltage
+        display.setFont(Design.Face.DayFont); // reuse
+        display.setTextColor(Design.Face.DayColor);
+        drawData(String(getBatteryVoltage()), Design.Face.TimeLeft, 26, WatchyGSR::dSTATIC, 0);
     }
 }
 
