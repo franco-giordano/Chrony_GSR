@@ -1,4 +1,5 @@
 #include "Watchy_GSR.h"
+#include "Defines_Secrets.h"
 
 // Place all of your data and variables here.
 
@@ -8,22 +9,39 @@ extern int GuiMode;
 #define CHR_ALERTON 2
 RTC_DATA_ATTR char ALERT_BUFFER[50];
 RTC_DATA_ATTR int WIFI_USAGE_COUNTER = 0;
+RTC_DATA_ATTR HTTPClient autoremoteCli;
+RTC_DATA_ATTR int httpResponseCode;
+
+void setAlert(const char *msg)
+{
+    Serial.print("SETTING ALERT: ");
+    Serial.println(msg);
+    if (!msg)
+    {
+        memset(ALERT_BUFFER, 0, sizeof(ALERT_BUFFER));
+    }
+    else
+    {
+        strcpy(ALERT_BUFFER, msg);
+    }
+}
 
 class ChronyGSR : public WatchyGSR
 {
 public:
     ChronyGSR() : WatchyGSR() {}
 
-    void InsertPost()
-    {
-        // for some reason, GSR marks my RTC as dead on boot
-        // because of this, my top right button won't work
-        // and performance will be set to 'battery saving'
-        // set it to false to avoid this
-        WatchTime.DeadRTC = false;
-    };
+    // void InsertPost()
+    // {
+    //     // for some reason, GSR marks my RTC as dead on boot
+    //     // because of this, my top right button won't work
+    //     // and performance will be set to 'battery saving'
+    //     // set it to false to avoid this
+    //     WatchTime.DeadRTC = false;
+    // };
 
-    void InsertDefaults() {
+    void InsertDefaults()
+    {
         AllowDefaultWatchStyles(false);
         // Options.Feedback = true;
     }
@@ -87,9 +105,11 @@ public:
     void InsertDrawWatchStyle(uint8_t StyleID)
     {
         if (StyleID == ChronyStyle)
-        {   
+        {
             Serial.print("STATE IS ");
             Serial.println(String(GuiMode));
+            Serial.print("WIFI IS: ");
+            Serial.println(currentWiFi());
             if (SafeToDraw())
             {
                 drawTime();
@@ -99,20 +119,20 @@ public:
             }
             if (NoMenu())
                 drawDate();
-            if (GuiMode == CHR_ALERTON)
+            if (ALERT_BUFFER[0]) // there is an alert
             {
-                int16_t  x1, y1, z1;
+                int16_t x1, y1, z1;
                 uint16_t w, h;
                 display.drawBitmap(0, Design.Menu.Top, MenuBackground, GSR_MenuWidth, GSR_MenuHeight, ForeColor(), BackColor());
                 setFontFor("Alert", Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
                 display.getTextBounds("Alert", 0, Design.Menu.Header + Design.Menu.Top, &x1, &y1, &w, &h);
-                w = (196 - w) /2;
+                w = (196 - w) / 2;
                 display.setCursor(w + 2, Design.Menu.Header + Design.Menu.Top);
                 display.print("Alert");
 
                 setFontFor(ALERT_BUFFER, Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
                 display.getTextBounds(ALERT_BUFFER, 0, Design.Menu.Data + Design.Menu.Top, &x1, &y1, &w, &h);
-                w = (196 - w) /2;
+                w = (196 - w) / 2;
                 display.setCursor(w + 2, Design.Menu.Data + Design.Menu.Top);
                 display.print(ALERT_BUFFER);
             }
@@ -135,11 +155,12 @@ public:
             Serial.println("OVERRIDE ABAJO!");
             if (GuiMode == GSR_WATCHON)
             {
-                if (launchTuyaControl()) {
+                if (launchTuyaControl())
+                {
                     Serial.println("SETTING GUI ALERT");
                     Refresh = true;
                     Haptic = true;
-                    GuiMode = CHR_ALERTON;
+                    // GuiMode = CHR_ALERTON;
                     return true;
                 }
             }
@@ -152,25 +173,69 @@ public:
           return false;
         };
     */
-    
+
     // http control
-    bool launchTuyaControl() {
-        if (WIFI_USAGE_COUNTER > 0) {
+    bool launchTuyaControl()
+    {
+        if (WIFI_USAGE_COUNTER > 0)
+        {
             // already in progress! dismiss
             return false;
         }
-        strcpy(ALERT_BUFFER, "Asking for WiFi...");
+        setAlert("Asking for WiFi...");
         WIFI_USAGE_COUNTER = 1;
         AskForWiFi();
         return true;
     }
 
-    void InsertWiFi() {
-        if (WIFI_USAGE_COUNTER == 0) {
+    void InsertWiFi()
+    {
+        Serial.println("CALLED INSERTWIFI");
+        if (WIFI_USAGE_COUNTER == 0)
+        {
             // I didn't ask for this, quit!
             return;
         }
 
-        
+        if (WIFI_USAGE_COUNTER == 1) // do step 1: begin
+        {
+            setAlert("Initializing...");
+            showWatchFace();
+            autoremoteCli.setConnectTimeout(3000); // 3 second max timeout
+            autoremoteCli.begin(AUTOREMOTE_GET_URL);
+            WIFI_USAGE_COUNTER++;
+        }
+        else if (WIFI_USAGE_COUNTER == 2) // step 2: query
+        {
+            setAlert("Sending...");
+            showWatchFace();
+            httpResponseCode = autoremoteCli.GET();
+            WIFI_USAGE_COUNTER++;
+        }
+        else if (WIFI_USAGE_COUNTER == 3) // step 3:
+        {
+            if (httpResponseCode == 200 && autoremoteCli.getString() == "OK")
+            {
+                setAlert("Sent!");
+                showWatchFace();
+            }
+            else
+            {
+                // http error
+                Serial.println("HTTP or Tasker error :(");
+                setAlert("Network or Tasker error :(");
+                showWatchFace();
+            }
+            autoremoteCli.end();
+            WIFI_USAGE_COUNTER++;
+            // finished!
+            endWiFi();
+            setAlert(null);
+        }
+    }
+
+    void InsertWiFiEnding()
+    {
+        WIFI_USAGE_COUNTER = 0;
     }
 };
