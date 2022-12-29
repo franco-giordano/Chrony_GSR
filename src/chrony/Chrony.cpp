@@ -139,31 +139,23 @@ bool ChronyGSR::InsertHandlePressed(uint8_t SwitchNumber, bool &Haptic, bool &Re
     {
     case 2: // Back
         Serial.println("OVERRIDE BACK!");
-        // Simulate we are on TIMEUP menu
-        GuiMode = GSR_MENUON;
-        Menu.Style = GSR_MENU_INTIMERS;
-        Menu.Item = GSR_MENU_TIMEUP;
-        Menu.SubItem = 1;
-
-        handleButtonPress(1); // turn on
-
-        Haptic = true;  // Cause Hptic feedback if set to true.
-        Refresh = true; // Cause the screen to be refreshed (redrwawn).
-        return true;    // Respond with "I used a button", so the WatchyGSR knows you actually did something with a button.
+        if (GuiMode == GSR_WATCHON && StartTimerShortcut())
+        {
+            Refresh = true;
+            Haptic = true;
+            return true;
+        }
         break;
     case 3: // Up
         return false;
         break;
     case 4: // Down
-        Serial.println("OVERRIDE ABAJO!");
-        if (GuiMode == GSR_WATCHON)
+        Serial.println("OVERRIDE DOWN!");
+        if (GuiMode == GSR_WATCHON && SendAutoRemote())
         {
-            if (SendAutoRemote())
-            {
-                Refresh = true;
-                Haptic = true;
-                return true;
-            }
+            Refresh = true;
+            Haptic = true;
+            return true;
         }
     }
     return false;
@@ -225,18 +217,18 @@ void ChronyGSR::drawDateTime()
 }
 
 void ChronyGSR::drawTemperature()
-{        
+{
     String temperature = String(int(round(SBMA.readTemperature())));
-    display.setFont(Design.Face.DayFont);   // reuse
+    display.setFont(Design.Face.DayFont); // reuse
     display.setTextColor(Design.Face.DayColor);
-    //Get width of text & center it under the weather icon. 165 is the centerpoint of the icon
+    // Get width of text & center it under the weather icon. 165 is the centerpoint of the icon
     int16_t x1, y1;
     uint16_t w, h;
     display.getTextBounds(temperature + ".", 45, 13, &x1, &y1, &w, &h);
     display.setCursor(166 - w / 2, 148);
     display.println(temperature + ".");
 
-    const unsigned char* weatherIcon = WatchTime.BedTime ? clearskynight : clearsky;
+    const unsigned char *weatherIcon = WatchTime.BedTime ? clearskynight : clearsky;
     display.drawBitmap(143, 93, weatherIcon, 45, 40, ForeColor());
 }
 
@@ -261,11 +253,6 @@ void ChronyGSR::drawAlert()
         display.print(ALERT_BUFFER);
     }
 }
-
-// bool OverrideBitmap()
-// {
-//     return OverrideSleepBitmap();
-// };
 
 // http control
 bool ChronyGSR::SendAutoRemote()
@@ -332,7 +319,20 @@ void ChronyGSR::InsertWiFiEnding()
     WIFI_USAGE_COUNTER = 0;
 }
 
-/* 
+bool ChronyGSR::StartTimerShortcut()
+{
+    // Simulate we are on TIMEUP menu
+    GuiMode = GSR_MENUON;
+    Menu.Style = GSR_MENU_INTIMERS;
+    Menu.Item = GSR_MENU_TIMEUP;
+    Menu.SubItem = 1;
+
+    handleButtonPress(1); // turn on
+
+    return true;
+}
+
+/*
     === UTILS ===
 */
 

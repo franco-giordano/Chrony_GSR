@@ -36,6 +36,7 @@ private:
     // 'Apps'
     // http control
     bool SendAutoRemote();
+    bool StartTimerShortcut();
 };
 
 #endif
