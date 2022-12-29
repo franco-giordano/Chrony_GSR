@@ -80,6 +80,8 @@ public:
     void InsertDefaults()
     {
         AllowDefaultWatchStyles(false);
+        Options.LightMode = false;
+        Options.Border = true;
     }
 
     // The next 3 functions allow you to add your own WatchFaces, there are examples that do work below.
@@ -105,14 +107,14 @@ public:
             Design.Face.Gutter = 0;
             Design.Face.Time = 87;
             Design.Face.TimeHeight = 45;
-            Design.Face.TimeColor = GxEPD_BLACK;
+            Design.Face.TimeColor = ForeColor();
             Design.Face.TimeFont = &timeLGMono42pt7b;
             Design.Face.TimeLeft = 16;
             Design.Face.TimeStyle = WatchyGSR::dSTATIC;
             Design.Face.DayLeft = 76; // for Day of Week String
             Design.Face.Day = 184;
             Design.Face.DayGutter = 0;
-            Design.Face.DayColor = GxEPD_BLACK;
+            Design.Face.DayColor = ForeColor();
             Design.Face.DayFont = &smTextMono8pt7b;
             Design.Face.DayFontSmall = &smTextMono8pt7b;
             Design.Face.DayFontSmaller = &smTextMono8pt7b;
@@ -120,14 +122,14 @@ public:
             Design.Face.DateLeft = 76; // for Month Str and Day number (e.g. 8 November)
             Design.Face.Date = 169;
             Design.Face.DateGutter = 0; // only use for Month Str
-            Design.Face.DateColor = GxEPD_BLACK;
+            Design.Face.DateColor = ForeColor();
             Design.Face.DateFont = &smTextMono8pt7b;
             Design.Face.DateFontSmall = &smTextMono8pt7b;
             Design.Face.DateFontSmaller = &smTextMono8pt7b;
             Design.Face.DateStyle = WatchyGSR::dSTATIC;
             Design.Face.YearLeft = 99; // for Year number (e.g. 2022)
             Design.Face.Year = 186;
-            Design.Face.YearColor = GxEPD_BLACK;
+            Design.Face.YearColor = ForeColor();
             Design.Face.YearFont = &smTextMono8pt7b;
             Design.Face.YearLeft = 0;
             Design.Face.YearStyle = WatchyGSR::dSTATIC;
@@ -194,7 +196,7 @@ public:
         Serial.println("OVERRIDING BITMAP");
         display.setFont(&smTextMono8pt7b);
         display.setTextColor(GxEPD_WHITE);
-        drawData("Watchy is asleep", Design.Face.TimeLeft, Design.Face.Time, WatchyGSR::dCENTER, 0);
+        drawData("Watchy is asleep", Design.Face.TimeLeft, 34, WatchyGSR::dCENTER, 0);
         display.drawBitmap(100 - 45 / 2, 100 - 40 / 2, Design.Face.SleepBitmap, 45, 40, GxEPD_WHITE, GxEPD_BLACK);
         drawData("Tap to wake", Design.Face.DateLeft, Design.Face.Date + 5, WatchyGSR::dCENTER, 0);
         return true;
@@ -202,40 +204,62 @@ public:
 
     void drawChronyWatchStyle()
     {
-        if (NoMenu())
+        if (SafeToDraw())
         {
-            // drawTime();
-            String hourStr = padWithZero(WatchTime.Local.Hour);
-            String minStr = padWithZero(WatchTime.Local.Minute);
-
-            display.setFont(Design.Face.TimeFont);
-            display.setTextColor(Design.Face.TimeColor);
-            drawData(hourStr, Design.Face.TimeLeft, Design.Face.Time, Design.Face.TimeStyle, 0);
-            drawData(minStr, 16, 148, Design.Face.TimeStyle, 0);
-
-            // drawDay();
-            display.setFont(Design.Face.DayFont);
-            display.setTextColor(Design.Face.DayColor);
-            String dayName = LGSR.GetWeekday(Options.LanguageID, WatchTime.Local.Wday);
-
-            String monthName = LGSR.GetMonth(Options.LanguageID, WatchTime.Local.Month);
-            String dateStr = padWithZero(WatchTime.Local.Day);
-
-            // day number (08)
-            display.setFont(&timeLGMono20pt7b); // use different hardcoded values
-            display.setCursor(16, 184);         // WatchyGSR assumes monthStyle == dateStyle
-            display.print(dateStr);             // which is not the case here
-
-            // month name (december)
-            display.setFont(Design.Face.DateFont);
-            display.setTextColor(Design.Face.DateColor);
-            drawData(monthName, Design.Face.DateLeft, Design.Face.Date, Design.Face.DateStyle, 0);
-
-            // week day (thursday)
-            display.setFont(Design.Face.DayFont);
-            display.setTextColor(Design.Face.DayColor);
-            drawData(dayName, Design.Face.DayLeft, Design.Face.Day, Design.Face.DayStyle, 0);
+            drawDateTime();
+            drawTemperature();
         }
+    }
+
+    void drawDateTime()
+    {
+        // drawTime();
+        String hourStr = padWithZero(WatchTime.Local.Hour);
+        String minStr = padWithZero(WatchTime.Local.Minute);
+
+        display.setFont(Design.Face.TimeFont);
+        display.setTextColor(Design.Face.TimeColor);
+        drawData(hourStr, Design.Face.TimeLeft, Design.Face.Time, Design.Face.TimeStyle, 0);
+        drawData(minStr, 16, 148, Design.Face.TimeStyle, 0);
+
+        // drawDay();
+        display.setFont(Design.Face.DayFont);
+        display.setTextColor(Design.Face.DayColor);
+        String dayName = LGSR.GetWeekday(Options.LanguageID, WatchTime.Local.Wday);
+
+        String monthName = LGSR.GetMonth(Options.LanguageID, WatchTime.Local.Month);
+        String dateStr = padWithZero(WatchTime.Local.Day);
+
+        // day number (08)
+        display.setFont(&timeLGMono20pt7b); // use different hardcoded values
+        display.setCursor(16, 184);         // WatchyGSR assumes monthStyle == dateStyle
+        display.print(dateStr);             // which is not the case here
+
+        // month name (december)
+        display.setFont(Design.Face.DateFont);
+        display.setTextColor(Design.Face.DateColor);
+        drawData(monthName, Design.Face.DateLeft, Design.Face.Date, Design.Face.DateStyle, 0);
+
+        // week day (thursday)
+        display.setFont(Design.Face.DayFont);
+        display.setTextColor(Design.Face.DayColor);
+        drawData(dayName, Design.Face.DayLeft, Design.Face.Day, Design.Face.DayStyle, 0);
+    }
+
+    void drawTemperature()
+    {        
+        String temperature = String(int(round(SRTC.temperature())));
+        display.setFont(Design.Face.DayFont);   // reuse
+        display.setTextColor(Design.Face.DayColor);
+        //Get width of text & center it under the weather icon. 165 is the centerpoint of the icon
+        int16_t x1, y1;
+        uint16_t w, h;
+        display.getTextBounds(temperature + ".", 45, 13, &x1, &y1, &w, &h);
+        display.setCursor(166 - w / 2, 148);
+        display.println(temperature + ".");
+
+        const unsigned char* weatherIcon = WatchTime.BedTime ? clearskynight : clearsky;
+        display.drawBitmap(143, 93, weatherIcon, 45, 40, ForeColor());
     }
 
     String padWithZero(uint8_t value)
@@ -250,6 +274,7 @@ public:
             int16_t x1, y1, z1;
             uint16_t w, h;
             display.drawBitmap(0, Design.Menu.Top, MenuBackground, GSR_MenuWidth, GSR_MenuHeight, ForeColor(), BackColor());
+            display.setTextColor(GxEPD_BLACK);
             setFontFor("Alert", Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
             display.getTextBounds("Alert", 0, Design.Menu.Header + Design.Menu.Top, &x1, &y1, &w, &h);
             w = (196 - w) / 2;
