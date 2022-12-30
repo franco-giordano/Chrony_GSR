@@ -1,30 +1,27 @@
-![Watchy GSR Face](https://github.com/GuruSR/Watchy_GSR/blob/main/Images/Watchy_GSR.gif)
+# Chrony_GSR
 
-This repo's format:
+![Current Chrony GSR Face](https://github.com/GuruSR/Chrony_GSR/blob/main/Images/chrony-face.png)
 
-Bin folder contains the current OTA Bin that you can use a tool to upload with or an OTA Upgrade capable firmware to install the current OTA Bin to the Watchy.
+## Current tweaks
 
-src folder contains a universal (Arduino & PlatformIO) setup for compilation, instructions on how to get it to compile are in the src folder.
+- [Pxl999 port](https://github.com/dezign999/pxl999) for Watchy_GSR (plus battery voltage)
+- Show current temperature in watch face (for now, local sensor only)
+- Menu overrides:
+    - Back: shortcut to auto-start Elapsed Timer
+    - Down: Send HTTP GET to predefined URL. In my case, I use it to send a Tasker AutoRemote action (to turn on my lights) :)
+- Required library tweaks are automated by PlatformIO's build process
+- And probably more to come
 
-Needed libraries:  Arduino Libraries, ArduinoOTA (included in ESP32 2.0.2), SmallRTC (1.6 or greater, GuruSR), SmallNTP (GuruSR), StableBMA (GuruSR), Olson2POSIX (GuruSR) AND Watchy (1.3.3 or greater) base.
+## Setup
 
-**NOTES:**
-- Watchy uses version 1.0.6 or *2.0.2* (or possibly higher than *2.0.4*) of the ESP32 libraries, 2.0.0 won't compile, 2.0.3 and 2.0.4 causes a boot crash loop, remove them manually and revert back to version 1.0.6 or use 2.0.2 (which seems to have been fixed).  Recommend using ESP32 2.0.2 until further notice.
+0. Instal Platform IO Core
+1. Clone the repo
+2. 
+```bash
+cd Chrony_GSR
+pio run -t upload
+```
 
-**WARNING:**
-As of Version 1.4.3H, the Compilation Instructions have changed, the GxEPD2 requires a define to be added to the .h file in the Compilation Instructions or the Dark Border will be disabled.
+Done! Library patches will be executed by the build process
 
-For instructions on usage of the firmware, see "Usage".
-
-Below is a layout of the Watchy Connect & the OTA Website (used while online your network) that gives you options to various things.
-
-
-![OTA Website](https://github.com/GuruSR/Watchy_GSR/blob/main/Images/Server-Help.png)
-
-OTA update is **ONLY** possible via an OTA compatible firmware which are:
-
-`Watchy GSR` and those overriding it.
-
-**If you have an OTA upload function in your firmware, ask for it to be added here.**
-
-For those wanting to override the looks of this Watchy face, look at the Override Information.
+Please see [Watchy_GSR's repo](https://github.com/GuruSR/Watchy_GSR/blob/main/Usage.md) for Usage and general information.
