@@ -35,7 +35,12 @@ extern struct MenuUse final
     int8_t SubSubItem; // Used mostly in the alarm to offset choice.
 } Menu;
 
-RTC_DATA_ATTR char ALERT_BUFFER[50];
+RTC_DATA_ATTR struct ScreenAlert final
+{
+    const int MIN_DISMISS_UTC = 5; // show alert for at least 5 seconds
+    char Message[50];
+    unsigned long UTCWhenSet;
+} CurrentAlert;
 RTC_DATA_ATTR int WIFI_USAGE_COUNTER = 0;
 RTC_DATA_ATTR HTTPClient autoremoteCli;
 RTC_DATA_ATTR int httpResponseCode;
@@ -51,6 +56,8 @@ void ChronyGSR::InsertPost()
     // and performance will be set to 'battery saving'
     // force-set it to false to avoid this
     WatchTime.DeadRTC = false;
+    Options.UsingDrift = false;
+    Options.Drift = 0;
     Options.Feedback = true;
     // Options.SleepStyle = 0;
 };
@@ -139,7 +146,7 @@ bool ChronyGSR::InsertHandlePressed(uint8_t SwitchNumber, bool &Haptic, bool &Re
     {
     case 2: // Back
         Serial.println("OVERRIDE BACK!");
-        if (GuiMode == GSR_WATCHON && StartTimerShortcut())
+        if (StartTimerShortcut())
         {
             Refresh = true;
             Haptic = true;
@@ -147,11 +154,12 @@ bool ChronyGSR::InsertHandlePressed(uint8_t SwitchNumber, bool &Haptic, bool &Re
         }
         break;
     case 3: // Up
+        Serial.println("OVERRIDE UP!");
         return false;
         break;
     case 4: // Down
         Serial.println("OVERRIDE DOWN!");
-        if (GuiMode == GSR_WATCHON && SendAutoRemote())
+        if (SendAutoRemote())
         {
             Refresh = true;
             Haptic = true;
@@ -239,8 +247,18 @@ void ChronyGSR::drawTemperature()
 
 void ChronyGSR::drawAlert()
 {
-    if (ALERT_BUFFER[0]) // there is an alert
+    if (CurrentAlert.Message[0]) // there is an alert
     {
+        Serial.println("Drawing alert!");
+        Serial.println(WatchTime.UTC_RAW);
+        Serial.println(CurrentAlert.UTCWhenSet);
+
+        if (WatchTime.UTC_RAW - CurrentAlert.UTCWhenSet > CurrentAlert.MIN_DISMISS_UTC)
+        {   // Clear alert and skip drawing
+            Serial.println("Old Alert, resetting...");
+            setAlert(null);
+            return;
+        }
         int16_t x1, y1, z1;
         uint16_t w, h;
         display.drawBitmap(0, Design.Menu.Top, MenuBackground, GSR_MenuWidth, GSR_MenuHeight, ForeColor(), BackColor());
@@ -251,11 +269,11 @@ void ChronyGSR::drawAlert()
         display.setCursor(w + 2, Design.Menu.Header + Design.Menu.Top);
         display.print("Alert");
 
-        setFontFor(ALERT_BUFFER, Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
-        display.getTextBounds(ALERT_BUFFER, 0, Design.Menu.Data + Design.Menu.Top, &x1, &y1, &w, &h);
+        setFontFor(CurrentAlert.Message, Design.Menu.Font, Design.Menu.FontSmall, Design.Menu.FontSmaller, Design.Menu.Gutter);
+        display.getTextBounds(CurrentAlert.Message, 0, Design.Menu.Data + Design.Menu.Top, &x1, &y1, &w, &h);
         w = (196 - w) / 2;
         display.setCursor(w + 2, Design.Menu.Data + Design.Menu.Top);
-        display.print(ALERT_BUFFER);
+        display.print(CurrentAlert.Message);
     }
 }
 
@@ -347,12 +365,14 @@ void setAlert(const char *msg)
     Serial.println(msg);
     if (!msg)
     {
-        memset(ALERT_BUFFER, 0, sizeof(ALERT_BUFFER));
+        memset(CurrentAlert.Message, 0, sizeof(CurrentAlert.Message));
     }
     else
     {
-        strcpy(ALERT_BUFFER, msg);
+        strlcpy(CurrentAlert.Message, msg, sizeof(CurrentAlert.Message));
     }
+
+    CurrentAlert.UTCWhenSet = WatchTime.UTC_RAW;
 }
 
 String padWithZero(uint8_t value)
