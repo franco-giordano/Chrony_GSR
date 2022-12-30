@@ -1,6 +1,6 @@
 # Chrony_GSR
 
-![Current Chrony GSR Face](https://github.com/GuruSR/Chrony_GSR/blob/main/Images/chrony-face.png)
+![Current Chrony GSR Face](https://github.com/franco-giordano/Chrony_GSR/blob/main/Images/chrony-face.png)
 
 ## Current tweaks
 
