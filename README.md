@@ -1,6 +1,8 @@
 # Chrony_GSR
 
-![Current Chrony GSR Face](https://github.com/franco-giordano/Chrony_GSR/blob/main/Images/chrony-face.png)
+<p align="center">
+    <img alt="Current Chrony GSR Face" height="175" src="./Images/chrony-face.png">
+</p>
 
 ## Current tweaks
 
