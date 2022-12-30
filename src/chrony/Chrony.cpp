@@ -49,19 +49,6 @@ RTC_DATA_ATTR int httpResponseCode;
 void setAlert(const char *msg);
 String padWithZero(uint8_t value);
 
-void ChronyGSR::InsertPost()
-{
-    // for some reason, GSR marks my RTC as dead on boot
-    // because of this, my top right button won't work
-    // and performance will be set to 'battery saving'
-    // force-set it to false to avoid this
-    WatchTime.DeadRTC = false;
-    Options.UsingDrift = false;
-    Options.Drift = 0;
-    Options.Feedback = true;
-    // Options.SleepStyle = 0;
-};
-
 void ChronyGSR::InsertDefaults()
 {
     AllowDefaultWatchStyles(false);

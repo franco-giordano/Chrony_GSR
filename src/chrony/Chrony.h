@@ -17,7 +17,6 @@ public:
 
 private:
     // GSR Overrides
-    void InsertPost();
     void InsertDefaults();
     void InsertAddWatchStyles();
     void InsertInitWatchStyle(uint8_t StyleID);
