@@ -17,6 +17,8 @@ public:
 
 private:
     // GSR Overrides
+    // void InsertPost();
+    // bool InsertNeedAwake(bool GoingAsleep) {return true;};
     void InsertDefaults();
     void InsertAddWatchStyles();
     void InsertInitWatchStyle(uint8_t StyleID);

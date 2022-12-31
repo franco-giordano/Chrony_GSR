@@ -170,6 +170,7 @@ RTC_DATA_ATTR     uint8_t   Alarms_Times[4];          // Set to 10 to start, end
 RTC_DATA_ATTR     uint8_t   Alarms_Playing[4];        // Means the alarm tripped and it is to be played (goes to 0 when it finishes).
 RTC_DATA_ATTR     uint8_t   Alarms_Repeats[4];        // 0-4 (20-80%) reduction in repetitions.
 //} Alarms[4];
+RTC_DATA_ATTR BLE BT;
 
 WiFiClient WiFiC;             // Tz
 HTTPClient HTTP;              // Tz
@@ -231,6 +232,7 @@ void WatchyGSR::init(String datetime){
 
     Wire.begin(SDA, SCL); //init i2c
     NVS.begin();
+    BT.begin("Chrony BLE");
 
     pinMode(GSR_MENU_PIN, INPUT);   // Prep these for the loop below.
     pinMode(GSR_BACK_PIN, INPUT);
@@ -569,6 +571,7 @@ void WatchyGSR::init(String datetime){
         }
     }
     if (SoundRet == pdPASS) vTaskDelete(SoundHandle);
+    BT.deinitBLE();
     deepSleep();
 }
 

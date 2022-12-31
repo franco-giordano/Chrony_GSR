@@ -4,6 +4,7 @@
 
 RTC_DATA_ATTR uint8_t ChronyStyle; // Remember RTC_DATA_ATTR for your variables so they don't get wiped on deep sleep.
 extern int GuiMode;
+extern BLE BT;
 extern struct Optional final
 {
     bool TwentyFour;         // If the face shows 24 hour or Am/Pm.
@@ -63,6 +64,14 @@ void ChronyGSR::InsertAddWatchStyles()
     ChronyStyle = AddWatchStyle("Chrony");
 };
 
+// void ChronyGSR::InsertPost()
+// {
+// }
+
+// bool ChronyGSR::InsertNeedAwake(bool GoingAsleep) {
+//     return true;
+// }
+
 void ChronyGSR::InsertInitWatchStyle(uint8_t StyleID)
 {
     if (StyleID == ChronyStyle)
@@ -114,12 +123,16 @@ void ChronyGSR::InsertInitWatchStyle(uint8_t StyleID)
 
 void ChronyGSR::InsertDrawWatchStyle(uint8_t StyleID)
 {
+    String data = "";
     if (StyleID == ChronyStyle)
     {
-        Serial.print("STATE IS ");
+        Serial.print(BT.sendBLE("/notifications", &data, true));
+        Serial.print(" < BT --- GUI STATE IS ");
         Serial.println(String(GuiMode));
         Serial.print("WIFI IS: ");
         Serial.println(currentWiFi());
+        Serial.print("NOTIFS ARE: ");
+        Serial.println(data);
 
         drawChronyWatchStyle();
 
@@ -241,7 +254,7 @@ void ChronyGSR::drawAlert()
         Serial.println(CurrentAlert.UTCWhenSet);
 
         if (WatchTime.UTC_RAW - CurrentAlert.UTCWhenSet > CurrentAlert.MIN_DISMISS_UTC)
-        {   // Clear alert and skip drawing
+        { // Clear alert and skip drawing
             Serial.println("Old Alert, resetting...");
             setAlert(null);
             return;

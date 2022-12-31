@@ -5,6 +5,8 @@ ChronyGSR watchy;
 
 void setup(){
   Serial.begin(115200);
+  while (!Serial);
+  
   watchy.init();
 }
 
