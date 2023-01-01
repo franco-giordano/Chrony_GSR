@@ -170,7 +170,6 @@ RTC_DATA_ATTR     uint8_t   Alarms_Times[4];          // Set to 10 to start, end
 RTC_DATA_ATTR     uint8_t   Alarms_Playing[4];        // Means the alarm tripped and it is to be played (goes to 0 when it finishes).
 RTC_DATA_ATTR     uint8_t   Alarms_Repeats[4];        // 0-4 (20-80%) reduction in repetitions.
 //} Alarms[4];
-RTC_DATA_ATTR BLE BT;
 
 WiFiClient WiFiC;             // Tz
 HTTPClient HTTP;              // Tz
@@ -194,6 +193,8 @@ uint8_t Missed;    // Button not in menu, not used, so can be used by override.
 bool AllowHaptic;  // For the Task to tell the main thread it can't use the Haptic feedback due to alarm/timer.
 uint8_t HapticMS;  // Holds how long it runs for.
 unsigned long LastButton, OTAFail, LastHelp;
+
+RTC_DATA_ATTR Notifications notif;
 
 WatchyGSR::WatchyGSR(){}  //constructor
 
@@ -232,7 +233,7 @@ void WatchyGSR::init(String datetime){
 
     Wire.begin(SDA, SCL); //init i2c
     NVS.begin();
-    BT.begin("Chrony BLE");
+    notif.init();
 
     pinMode(GSR_MENU_PIN, INPUT);   // Prep these for the loop below.
     pinMode(GSR_BACK_PIN, INPUT);
@@ -364,6 +365,7 @@ void WatchyGSR::init(String datetime){
         attachInterrupt(digitalPinToInterrupt(GSR_UP_PIN), std::bind(&WatchyGSR::handleInterrupt,this), HIGH);
         attachInterrupt(digitalPinToInterrupt(GSR_DOWN_PIN), std::bind(&WatchyGSR::handleInterrupt,this), HIGH);
         SoundRet = xTaskCreate(SoundAlarms,"Alarming",20480,NULL,(configMAX_PRIORITIES -1),&SoundHandle);
+        SoundRet = xTaskCreate(SoundAlarms,"Nofitications",20480,NULL,(configMAX_PRIORITIES - 2),&SoundHandle);
         DisplayInit();
 
         if (Button > 0) { handleButtonPress(Button); Button = 0; }
@@ -571,7 +573,7 @@ void WatchyGSR::init(String datetime){
         }
     }
     if (SoundRet == pdPASS) vTaskDelete(SoundHandle);
-    BT.deinitBLE();
+    notif.deinit();
     deepSleep();
 }
 

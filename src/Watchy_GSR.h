@@ -27,7 +27,7 @@
 #include "Icons_GSR.h"
 #include "ArduinoNvs.h"
 #include <esp32-hal.h>
-#include "BLE.h"
+#include "Notifications.h"
 
 class WatchyGSR{
     public:

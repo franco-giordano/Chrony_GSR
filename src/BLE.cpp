@@ -21,7 +21,7 @@
 
 #define SERVICE_UUID "5ac9bc5e-f8ba-48d4-8908-98b80b566e49"
 #define COMMAND_UUID "bcca872f-1a3e-4491-b8ec-bfc93c5dd91a"
-#define CHARACTERISTIC_NOTIFICATION_UPDATE "bcca872f-1a3e-4491-b8ec-bfc93c5dd901"
+// #define CHARACTERISTIC_NOTIFICATION_UPDATE "bcca872f-1a3e-4491-b8ec-bfc93c5dd901"
 
 #define FULL_PACKET 512
 #define CHARPOS_UPDATE_FLAG 5
@@ -117,14 +117,14 @@ class ccb : public BLECharacteristicCallbacks
   }
 };
 
-class notification_update_callback : public BLECharacteristicCallbacks
-{
-  void onWrite(BLECharacteristic *pCharacteristic)
-  {
-    Serial.println("GOT Notification " + String(pCharacteristic->getValue().c_str()));
-    // onNotificationEvent(String(pCharacteristic->getValue().c_str()));
-  }
-};
+// class notification_update_callback : public BLECharacteristicCallbacks
+// {
+//   void onWrite(BLECharacteristic *pCharacteristic)
+//   {
+//     Serial.println("GOT Notification " + String(pCharacteristic->getValue().c_str()));
+//     // onNotificationEvent(String(pCharacteristic->getValue().c_str()));
+//   }
+// };
 
 //
 // Constructor
@@ -166,19 +166,19 @@ bool BLE::begin(const char *localName = "Watchy BLE OTA")
           BLECharacteristic::PROPERTY_WRITE |
           BLECharacteristic::PROPERTY_NOTIFY);
 
-  notificationUpdateCharacteristic = pService->createCharacteristic(
-      CHARACTERISTIC_NOTIFICATION_UPDATE,
-      BLECharacteristic::PROPERTY_READ |
-          BLECharacteristic::PROPERTY_WRITE |
-          BLECharacteristic::PROPERTY_NOTIFY);
+  // notificationUpdateCharacteristic = pService->createCharacteristic(
+  //     CHARACTERISTIC_NOTIFICATION_UPDATE,
+  //     BLECharacteristic::PROPERTY_READ |
+  //         BLECharacteristic::PROPERTY_WRITE |
+  //         BLECharacteristic::PROPERTY_NOTIFY);
 
   // pOtaCharacteristic->addDescriptor(new BLE2902());
   // pOtaCharacteristic->setCallbacks(new otaCallback(this));
   commandCharacteristic->setCallbacks(new ccb());
   commandCharacteristic->setValue("");
 
-  notificationUpdateCharacteristic->setCallbacks(new notification_update_callback());
-  notificationUpdateCharacteristic->setValue("");
+  // notificationUpdateCharacteristic->setCallbacks(new notification_update_callback());
+  // notificationUpdateCharacteristic->setValue("");
 
   // add server callback so we can detect when we're connected.
   pServer->setCallbacks(new cb());

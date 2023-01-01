@@ -4,7 +4,6 @@
 
 RTC_DATA_ATTR uint8_t ChronyStyle; // Remember RTC_DATA_ATTR for your variables so they don't get wiped on deep sleep.
 extern int GuiMode;
-extern BLE BT;
 extern struct Optional final
 {
     bool TwentyFour;         // If the face shows 24 hour or Am/Pm.
@@ -35,6 +34,7 @@ extern struct MenuUse final
     int8_t SubItem;    // Used for menus that have sub items, like alarms and Sync Time.
     int8_t SubSubItem; // Used mostly in the alarm to offset choice.
 } Menu;
+extern Notifications notif;
 
 RTC_DATA_ATTR struct ScreenAlert final
 {
@@ -121,18 +121,18 @@ void ChronyGSR::InsertInitWatchStyle(uint8_t StyleID)
     }
 };
 
+String nofiticationData = "";
 void ChronyGSR::InsertDrawWatchStyle(uint8_t StyleID)
 {
-    String data = "";
     if (StyleID == ChronyStyle)
     {
-        Serial.print(BT.sendBLE("/notifications", &data, true));
         Serial.print(" < BT --- GUI STATE IS ");
         Serial.println(String(GuiMode));
         Serial.print("WIFI IS: ");
         Serial.println(currentWiFi());
+        notif.getNotifications(&nofiticationData, WatchTime.UTC_RAW);
         Serial.print("NOTIFS ARE: ");
-        Serial.println(data);
+        Serial.println(nofiticationData);
 
         drawChronyWatchStyle();
 
